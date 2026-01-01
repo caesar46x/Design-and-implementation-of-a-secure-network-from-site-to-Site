@@ -1,0 +1,202 @@
+عنوان المشروع : Design and implementation of a secure network from one site to site
+
+مشروع يهدف الى تامين شبكة امنة من موقع الى اخر و ذلك باستخدام تقنية MPLS 
+حيث تقوم بانشاء نفق بين الموقعين لتجعلهم كانهم ضمن موقع واحد
+تم تنفيذ المشروع باستخدام جهازين حاسب كل جهاز فيه vm يحتوي على win 7 + mikrotik chr 
+وسط النقل هي محاكاة ل بيئة WAN 
+و كل ذلك كان كخطوى اولى
+
+كخطوى ثانية
+تم العمل على تاسيس قناة اتصال مستقلة باستخدام مبادئ ال Traffic Engineering + Quality Of Service
+و عمل اولوية للحزم 
+و ضمان استقرارية كل حزمة اثناء مرورها او حركتها
+
+
+
+ Basic Router Configuration
+
+Assign interfaces:
+LAN → LAN adapter
+wan2_mpls → Host-Only adapter
+
+IP Addresses:
+Site A:
+172.168.10.1/24 on LAN
+10.0.0.1/30 on wan2_mpls
+
+Site B:
+172.168.20.1/24 on LAN
+10.0.0.2/30 on wan2_mpls
+
+
+The configuration includes:
+- Basic interface setup
+- Assigning IP addresses
+- DHCP server configuration
+- NAT and firewall setup
+- Enabling LAN connectivity
+- Configuring WAN/MPLS links
+- OSPF dynamic routing
+- MPLS & LDP activation
+- Traffic Engineering / QOS
+- End-to-end connectivity verification
+
+
+Firewall Rules:
+Allow:
+- LDP (TCP 646)
+- OSPF (protocol 89)
+- LAN input
+
+
+ MPLS & LDP
+Enable MPLS interface and LDP over wan2_mpls.
+Verify LDP neighbor operational.
+
+ MPLS Forwarding Table
+Each router should have labels for the other site's LAN.
+
+
+OSPF Routing
+Router IDs:
+Site A: 172.168.10.1
+Site B: 172.168.20.1
+
+Advertise:
+- LAN networks
+- MPLS WAN network
+
+
+Traffic Engineering :
+
+Address List :
+Address: 172.168.10.0/24 - site 2
+Address: 172.168.20.0/24 - site 2
+Mangle Rules
+
+
+Policy Routes + Failover :
+VoIP Routes 
+
+Primary – VoIP Link
+
+Dst: 172.168.20.0/24
+
+Gateway: 10.0.0.2
+
+Routing Mark: VOIP_PATH
+
+Distance: 1
+
+Type: unicast
+
+Backup – Data Link
+
+Dst: 172.168.20.0/24
+
+Gateway: 11.0.0.2
+
+Routing Mark: VOIP_PATH
+
+Distance: 10
+
+Type: unicast
+
+
+
+
+
+DATA Routes :
+Primary – Data Link
+
+Dst: 172.168.20.0/24
+
+Gateway: 11.0.0.2
+
+Routing Mark: DATA_PATH
+
+Distance: 1
+
+Type: unicast
+
+Backup – VoIP Link
+
+Dst: 172.168.20.0/24
+
+Gateway: 10.0.0.2
+
+Routing Mark: DATA_PATH
+
+Distance: 20
+
+Type: unicast
+
+
+
+Packet Marks لـ QoS :
+
+Firewall → Mangle
+
+Chain: prerouting
+
+Protocol: icmp
+
+Action: mark-packet
+
+New Packet Mark: pkt_icmp
+
+
+
+
+Queue Tree – VoIP Link :
+Parent
+
+Name: VOIP_TOTAL
+
+Parent: MPLS_VOIP
+
+Max Limit: 5M
+
+Child – VoIP
+
+Name: VOIP_Q
+
+Parent: VOIP_TOTAL
+
+Packet Mark: pkt_voip
+
+Priority: 1
+
+Max Limit: 2M
+
+
+Queue Tree – DATA Link :
+Parent :
+
+Name: DATA_TOTAL
+
+Parent: MPLS_DATA
+
+Max Limit: 10M
+
+Child – ICMP :
+
+Name: ICMP_Q
+
+Parent: DATA_TOTAL
+
+Packet Mark: pkt_icmp
+
+Priority: 1
+
+Max Limit: 1M
+
+Child – DATA :
+
+Name: DATA_Q
+
+Parent: DATA_TOTAL
+
+Priority: 8
+
+Max Limit: 9M
