@@ -7,26 +7,22 @@
 و كل ذلك كان كخطوى اولى
 
 كخطوى ثانية
-تم العمل على تاسيس قناة اتصال مستقلة باستخدام مبادئ ال Traffic Engineering + Quality Of Service
+تم العمل على تاسيس قناة اتصال مستقلة باستخدام مبادئ ال Traffic Engineering + Qos using mangle and marking ، tree
 و عمل اولوية للحزم 
 و ضمان استقرارية كل حزمة اثناء مرورها او حركتها
 
 
 
  Basic Router Configuration
+العناوين المستخدمة :
+10.0.0.0/28
+11.0.0.0/28
+172.168.10.0/24
+172.178.20.0/24
 
 Assign interfaces:
 LAN → LAN adapter
 wan2_mpls → Host-Only adapter
-
-IP Addresses:
-Site A:
-172.168.10.1/24 on LAN
-10.0.0.1/30 on wan2_mpls
-
-Site B:
-172.168.20.1/24 on LAN
-10.0.0.2/30 on wan2_mpls
 
 
 The configuration includes:
@@ -56,11 +52,7 @@ Verify LDP neighbor operational.
  MPLS Forwarding Table
 Each router should have labels for the other site's LAN.
 
-
 OSPF Routing
-Router IDs:
-Site A: 172.168.10.1
-Site B: 172.168.20.1
 
 Advertise:
 - LAN networks
@@ -68,10 +60,7 @@ Advertise:
 
 
 Traffic Engineering :
-
-Address List :
-Address: 172.168.10.0/24 - site 2
-Address: 172.168.20.0/24 - site 2
+Address List 
 Mangle Rules
 
 
@@ -198,5 +187,8 @@ Name: DATA_Q
 Parent: DATA_TOTAL
 
 Priority: 8
+
+Max Limit: 9M
+
 
 Max Limit: 9M
