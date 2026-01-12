@@ -7,52 +7,56 @@
 و كل ذلك كان كخطوى اولى
 
 كخطوى ثانية
-تم العمل على تاسيس قناة اتصال مستقلة باستخدام مبادئ ال Traffic Engineering + Qos using mangle and marking ، tree
+تم العمل على تاسيس قناة اتصال مستقلة باستخدام مبادئ ال Traffic Engineering + Quality Of Service
 و عمل اولوية للحزم 
 و ضمان استقرارية كل حزمة اثناء مرورها او حركتها
 
 
 
  Basic Router Configuration
-العناوين المستخدمة :
-10.0.0.0/28
-11.0.0.0/28
-172.168.10.0/24
-172.178.20.0/24
 
 Assign interfaces:
 LAN → LAN adapter
-wan2_mpls → Host-Only adapter
+MPLS_PR → Bridge to Ethernet
+MPLS_SEC → Bridge to WIFI
 
+IP Addresses:
+Site A:
+172.168.10.0/24 on LAN
+10.0.0.1/28 on MPLS_PR
+11.0.0.1/28 on MPLS_SEC
+
+Site B:
+172.168.20.1/24 on LAN
+10.0.0.2/28 on MPLS_PR
+11.0.0.2/28 on MPLS_SEC
 
 The configuration includes:
 - Basic interface setup
 - Assigning IP addresses
 - DHCP server configuration
 - NAT and firewall setup
-- Enabling LAN connectivity
 - Configuring WAN/MPLS links
 - OSPF dynamic routing
 - MPLS & LDP activation
 - Traffic Engineering / QOS
-- End-to-end connectivity verification
 
 
 Firewall Rules:
-Allow:
-- LDP (TCP 646)
-- OSPF (protocol 89)
-- LAN input
+NAT
+MANGLE
 
 
  MPLS & LDP
-Enable MPLS interface and LDP over wan2_mpls.
+Enable MPLS interface and LDP .
 Verify LDP neighbor operational.
 
  MPLS Forwarding Table
 Each router should have labels for the other site's LAN.
 
+
 OSPF Routing
+Declare the available routes (Primary-Secondary) 
 
 Advertise:
 - LAN networks
@@ -60,136 +64,13 @@ Advertise:
 
 
 Traffic Engineering :
-Address List 
+
+Address List :
+Address: 172.168.10.0/24 - site 2
+Address: 172.168.20.0/24 - site 2
+
 Mangle Rules
+Policy Routes + Failover + Load Balancing .
 
-
-Policy Routes + Failover :
-VoIP Routes 
-
-Primary – VoIP Link
-
-Dst: 172.168.20.0/24
-
-Gateway: 10.0.0.2
-
-Routing Mark: VOIP_PATH
-
-Distance: 1
-
-Type: unicast
-
-Backup – Data Link
-
-Dst: 172.168.20.0/24
-
-Gateway: 11.0.0.2
-
-Routing Mark: VOIP_PATH
-
-Distance: 10
-
-Type: unicast
-
-
-
-
-
-DATA Routes :
-Primary – Data Link
-
-Dst: 172.168.20.0/24
-
-Gateway: 11.0.0.2
-
-Routing Mark: DATA_PATH
-
-Distance: 1
-
-Type: unicast
-
-Backup – VoIP Link
-
-Dst: 172.168.20.0/24
-
-Gateway: 10.0.0.2
-
-Routing Mark: DATA_PATH
-
-Distance: 20
-
-Type: unicast
-
-
-
-Packet Marks لـ QoS :
-
-Firewall → Mangle
-
-Chain: prerouting
-
-Protocol: icmp
-
-Action: mark-packet
-
-New Packet Mark: pkt_icmp
-
-
-
-
-Queue Tree – VoIP Link :
-Parent
-
-Name: VOIP_TOTAL
-
-Parent: MPLS_VOIP
-
-Max Limit: 5M
-
-Child – VoIP
-
-Name: VOIP_Q
-
-Parent: VOIP_TOTAL
-
-Packet Mark: pkt_voip
-
-Priority: 1
-
-Max Limit: 2M
-
-
-Queue Tree – DATA Link :
-Parent :
-
-Name: DATA_TOTAL
-
-Parent: MPLS_DATA
-
-Max Limit: 10M
-
-Child – ICMP :
-
-Name: ICMP_Q
-
-Parent: DATA_TOTAL
-
-Packet Mark: pkt_icmp
-
-Priority: 1
-
-Max Limit: 1M
-
-Child – DATA :
-
-Name: DATA_Q
-
-Parent: DATA_TOTAL
-
-Priority: 8
-
-Max Limit: 9M
-
-
-Max Limit: 9M
-
+Queue Tree:
+Priorities + Bandwidth .
