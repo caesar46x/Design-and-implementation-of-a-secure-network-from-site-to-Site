@@ -27,6 +27,11 @@ Simulation results include:
 * End-to-End Delay
 * Packet Delay Variation (Jitter)
 * MOS Evaluation
+* Flows
+Packet sent , received  
+Throughput 
+RSVP flows
+Delay (ms)
 * Tunnel Utilization
 * RSVP Session Statistics
 * OSPF Convergence Analysis
